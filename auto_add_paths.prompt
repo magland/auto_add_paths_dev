@@ -16,6 +16,16 @@ No blank lines, no commentary, no quoting.
 - Read `README*`, `INSTALL*`, `CONTENTS.m`, `Contents.m`, `startup.m`,
   `setup.m`, `install.m`, `*_install.m`, `*setup*.m`, `paths.m`, or any script
   whose name suggests it installs / configures the package.
+- Read **toolbox metadata** if present: `*.prj` project files and JSON specs
+  like `toolbox.json` or `<pkg>.json` containing a `ToolboxMatlabPath` (or
+  equivalent) field. Treat these as useful evidence for what the *author*
+  puts on the path, but **not** automatically authoritative — toolbox
+  authors routinely add doc/example folders to `ToolboxMatlabPath` so that
+  shipped examples can be opened by name. The standard exclusion rules
+  below still apply: a folder that is clearly documentation or an example
+  gallery (e.g. `layoutdoc`, `docexamples`) should be excluded even if the
+  metadata lists it. Installing the package means reaching its library
+  surface, not its docs.
 - Skim a handful of `.m` files to understand what lives where.
 - Read license / top-level docs only if needed to disambiguate.
 
@@ -43,7 +53,11 @@ Exclude a directory if **any** of the following is true:
   * **Exception**: if the README says demos *are* the entry point (rare, but
     happens for teaching packages), include them.
 - It is documentation: `doc`, `docs`, `documentation`, `html`, `man`,
-  generated Doxygen output, sphinx output, website source.
+  generated Doxygen output, sphinx output, website source. Also exclude
+  folders whose name or content clearly marks them as documentation even
+  if not exactly one of these names — e.g. `layoutdoc`, `userguide`, a
+  folder whose `.m` files are all example scripts alongside many `.md` /
+  `.html` pages. These are for reading, not for calling.
 - It is build / CI / tooling: `.git`, `.github`, `.svn`, `.hg`, `.circleci`,
   `.vscode`, `.idea`, `build`, `dist`, `target`, `obj`, `node_modules`,
   `__pycache__`.

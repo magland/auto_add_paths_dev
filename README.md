@@ -73,7 +73,24 @@ fault and should be fixed.
 ## Iteration loop (what the orchestrator does)
 
 1. **Pick a package.** The user will usually name one (often by FEX URL).
-   Resolve to a GitHub URL and `git clone --depth 1` into `packages/`.
+   - If the submission publishes to GitHub, `git clone --depth 1` into
+     `packages/<pkg>/`.
+   - Otherwise, download the zip straight from File Exchange by
+     resolving the redirect that the FEX landing page emits when you
+     append `?download=true`:
+     ```
+     curl -sIL "<fex-url>?download=true" | grep -i '^location:' | tail -1
+     ```
+     That redirect target has the form
+     `https://www.mathworks.com/matlabcentral/mlc-downloads/downloads/<uuid>/<uuid>/packages/zip/<pkgname><version>.zip?src=&license=`.
+     Strip the `?src=&license=` query string, download with `curl -sL`,
+     and `unzip` into `packages/<pkg>/`. Two gotchas:
+     * Do **not** send `User-Agent: Mozilla/...` — Akamai returns 403
+       for spoofed browser UAs. Default `curl/x.y` works.
+     * The versioned `.../submissions/<id>/versions/<n>/download/zip`
+       endpoint exists but only goes up to a fixed old version and does
+       not track the current FEX release. Always use the redirect-
+       based URL above for the latest.
 2. **Establish ground truth.** Read the `README`, any install script, the
    main entry point, and enough of the structure to know what actually
    needs to be on the path. Write `results/<pkg>.truth.txt`. One relative
@@ -142,24 +159,35 @@ that the script refuses to read.
   functions used only by demos, where the demo itself `addpath`s them at
   runtime, should be excluded. The script includes them because they have
   real `.m` files. Seen in inpoly (`mesh-file/`).
+- **Documentation folders with example `.m` files.** A folder whose name
+  doesn't match the skip list (e.g. `layoutdoc`) but whose `.m` files are
+  all example scripts backing `.md` doc pages. Toolbox authors often add
+  such folders to `ToolboxMatlabPath` so that `>> edit dockExample` works
+  from the help browser, but a user *installing* the package doesn't need
+  them on the path. The script includes them because they have real `.m`
+  files and no skip-list name match. Seen in GUI-Layout-Toolbox
+  (`tbx/layoutdoc/`).
 
 ## Current scoreboard
 
 Run `./run_all.sh` for live numbers. As of the last update:
 
 ```
-chebfun         matlab 1.000  ai 1.000
-ezc3d           matlab 1.000  ai 1.000
-gramm           matlab 1.000  ai 1.000
-inpoly          matlab 0.667  ai 1.000
-jsonlab         matlab 1.000  ai 1.000
-Mathworks_QLabs matlab 1.000  ai 1.000
-matlab2tikz     matlab 1.000  ai 1.000
-PIVlab          matlab 0.533  ai 1.000
-readbkc         matlab 1.000  ai 1.000
-YALMIP          matlab 1.000  ai 1.000
-zmat            matlab 1.000  ai 1.000
+chebfun            matlab 1.000  ai 1.000
+ezc3d              matlab 1.000  ai 1.000
+gramm              matlab 1.000  ai 1.000
+GUI-Layout-Toolbox matlab 0.667  ai 1.000
+inpoly             matlab 0.667  ai 1.000
+jsonlab            matlab 1.000  ai 1.000
+Mathworks_QLabs    matlab 1.000  ai 1.000
+matlab2tikz        matlab 1.000  ai 1.000
+PIVlab             matlab 0.533  ai 1.000
+readbkc            matlab 1.000  ai 1.000
+ReferenceFrame3d   matlab 1.000  ai 1.000
+StreamingFaceDetection matlab 1.000  ai 1.000
+YALMIP             matlab 1.000  ai 1.000
+zmat               matlab 1.000  ai 1.000
 ```
 
-11 packages. Strict AI: 11/11 perfect. MATLAB script: 9/11 perfect,
-2 partial (both due to the known limitations above).
+14 packages. Strict AI: 14/14 perfect. MATLAB script: 11/14 perfect,
+3 partial (all due to the known limitations above).
