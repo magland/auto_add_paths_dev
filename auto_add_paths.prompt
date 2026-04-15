@@ -1,0 +1,77 @@
+# Auto-add-paths for a MATLAB package
+
+You will be given a path to a directory containing a MATLAB package (usually
+downloaded from MATLAB File Exchange or GitHub). Your task is to determine the
+**minimal, correct list of relative subdirectories** that a user would need to
+add via `addpath(fullfile(pkg_root, ...))` in order to *install* the package so
+that all its public entry points, supporting functions, and shipped data are
+reachable.
+
+Write the answer to the output file as **one relative path per line** (relative
+to the package root). Use `.` for the package root itself. Use forward slashes.
+No blank lines, no commentary, no quoting.
+
+## What you may do
+- List directories.
+- Read `README*`, `INSTALL*`, `CONTENTS.m`, `Contents.m`, `startup.m`,
+  `setup.m`, `install.m`, `*_install.m`, `*setup*.m`, `paths.m`, or any script
+  whose name suggests it installs / configures the package.
+- Skim a handful of `.m` files to understand what lives where.
+- Read license / top-level docs only if needed to disambiguate.
+
+## Rules for including a directory
+Include a directory if **any** of the following is true:
+1. It contains `.m` files (functions, scripts, classes) that are part of the
+   library's runtime surface — i.e. something the user would call, or
+   something those user-facing functions transitively depend on.
+2. It contains `.mex*` / `.mexa64` / `.mexw64` / `.mexmaci64` binaries that
+   back a public function, or a `lib/` of compiled artifacts the package loads.
+3. It contains `.mat`, `.fig`, `.mlapp`, icons, or other resources that are
+   loaded via bare filename (no path) by the runtime code — meaning MATLAB
+   must be able to find them on the path.
+4. The install / README explicitly says to add it.
+
+## Rules for EXCLUDING a directory
+Exclude a directory if **any** of the following is true:
+- It is a **MATLAB special folder** and would be added implicitly by adding
+  its parent: names beginning with `@` (class folders), `+` (package
+  namespaces), or named `private`. Do not list these — add the parent.
+- It is a test / demo / example / tutorial / benchmark directory that the user
+  does not need to *run* the package. Common names: `test`, `tests`,
+  `testing`, `unittest`, `demo`, `demos`, `example`, `examples`, `tutorial`,
+  `tutorials`, `benchmark`, `benchmarks`, `sandbox`, `scratch`.
+  * **Exception**: if the README says demos *are* the entry point (rare, but
+    happens for teaching packages), include them.
+- It is documentation: `doc`, `docs`, `documentation`, `html`, `man`,
+  generated Doxygen output, sphinx output, website source.
+- It is build / CI / tooling: `.git`, `.github`, `.svn`, `.hg`, `.circleci`,
+  `.vscode`, `.idea`, `build`, `dist`, `target`, `obj`, `node_modules`,
+  `__pycache__`.
+- It contains only source for MEX (e.g. `src/` with `.c`/`.cpp`/`.cu`/`.f` and
+  no `.m` or compiled artifact that MATLAB needs to find by name).
+- It is a bundled third-party dependency that the README says is optional, or
+  that lives under `external/`, `thirdparty/`, `contrib/` and is not required
+  by default. (If the README says it *is* required by default, include it.)
+- It contains only data used by tests/demos (not loaded by the runtime).
+
+## How to decide ambiguous cases
+- If a directory has `.m` files but the README mentions it only in a "how to
+  contribute" or "how the internals work" context → probably still include
+  (internal functions are reached through the path).
+- If a directory has `.m` files but every single one is a script that is
+  meant to be `run` manually from that directory (e.g. a demo gallery),
+  exclude.
+- If unsure, prefer **inclusion** — a superfluous addpath is a minor wart; a
+  missing one breaks the package.
+
+## Output
+Write exactly the list of relative paths to the output file path you are
+given. Nothing else. The first line should typically be `.` (the package root)
+unless the root has no `.m`/`.mex` files and exists purely as a wrapper.
+
+## Before you finish
+- Re-check the README / install script. If it dictated a specific set of
+  paths, your list should match.
+- Sanity-check: would a user who runs `addpath` on each of your lines be able
+  to call the package's documented entry-point functions? If not, add what is
+  missing.

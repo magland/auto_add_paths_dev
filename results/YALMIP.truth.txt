@@ -1,0 +1,11 @@
+.
+extras
+operators
+solvers
+modules
+modules/bilevel
+modules/global
+modules/moment
+modules/parametric
+modules/robust
+modules/sos

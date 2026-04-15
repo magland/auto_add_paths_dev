@@ -1,0 +1,9 @@
+.
+OptimizationSolvers/minFunc
+OptimizationSolvers/minFunc/autoDif
+OptimizationSolvers/minFunc/logisticExample
+OptimizationSolvers/minFunc/minFunc
+OptimizationSolvers/minFunc/minFunc/compiled
+PIVlab_capture_resources
+PIVlab_capture_resources/pco_resources
+help
